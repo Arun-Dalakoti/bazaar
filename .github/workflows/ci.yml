@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.32.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint API
+        run: pnpm --filter @bazaar/api lint
+
+      - name: Typecheck API
+        run: pnpm --filter @bazaar/api exec tsc --noEmit --incremental false
+
+      - name: Run API tests
+        run: pnpm --filter @bazaar/api test
+
+  storefront:
+    name: Storefront checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.32.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint storefront
+        run: pnpm --filter @bazaar/storefront lint
+
+      - name: Typecheck storefront
+        run: pnpm --filter @bazaar/storefront exec tsc --noEmit --incremental false
+
+      - name: Run storefront tests
+        run: pnpm --filter @bazaar/storefront test
+
+  api-image:
+    name: Build API image
+    runs-on: ubuntu-latest
+    needs: api
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          tags: bazaar-api:ci
