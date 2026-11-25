@@ -31,4 +31,4 @@ WORKDIR /repo
 
 COPY --from=builder /repo ./
 
-CMD ["node", "apps/api/dist/main.js"]
+CMD ["node", "apps/api/dist/server.js"]

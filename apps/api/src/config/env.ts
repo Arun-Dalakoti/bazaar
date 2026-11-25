@@ -19,8 +19,8 @@ export const envSchema = z.object({
 
 export type AppEnv = z.infer<typeof envSchema>;
 
-export function validateEnv(config: Record<string, unknown>): AppEnv {
-  const result = envSchema.safeParse(config);
+export function parseEnv(source: Record<string, unknown> = process.env): AppEnv {
+  const result = envSchema.safeParse(source);
 
   if (!result.success) {
     const details = result.error.issues
